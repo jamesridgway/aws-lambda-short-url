@@ -45,10 +45,78 @@ CloudFront Domain Name = d111111abcdef8.cloudfront.net
 Short URL Doamin = example.com
 ```
 
+## Using the API
+Deploying the infrastructure with terraform will take only a few minutes and once the CloudFront distribution has been fully initialised you'll be ready to start creating URLs.
 
+### Creating a Short URL
 
-## Custom Domain (with HTTPS)
+Creating a URL is done with a `POST` request to the `/admin` endpoint. The `x-api-key` header should be set to the `Admin API Key` value that was generated in the output of the terraform setup:
 
-Setting up a custom domain with HTTPS requires a few manual steps to be completed. This will take you only a few minutes.
+```
+curl -X POST \
+	-d '{"url": "https://www.james-ridgway.co.uk/blog/build-your-own-custom-short-url-generator-using-aws"}' \
+	-H "x-api-key: XXXXX" \
+	http://exmple.com/admin
+```
 
-You can read the steps for setting up your custom domain [here](https://www.james-ridgway.co.uk/blog/build-your-own-custom-short-url-generator-using-aws).
+The response will provide you with the full short URL and token value in JSON output:
+
+```
+{
+	"short_url": "https://example.com/cwM1iQ",
+	"url": "https://www.james-ridgway.co.uk/blog/build-your-own-custom-short-url-generator-using-aws",
+	"token": "cwM1iQ"
+}
+```
+
+### Visit a Short URL
+So here's an example of one of my short URL: [https://jmsr.io/cwM1iQ](https://jmsr.io/cwM1iQ). This link is a short link to my [Build your own custom Short URL generator using AWS](https://www.james-ridgway.co.uk/blog/build-your-own-custom-short-url-generator-using-aws) blog post.
+
+CloudFront serves up the empty S3 object as shown below using CURL with the vebose flag. You get a `301 Moved Permanently` response with the `Location` header set to the full URL.
+
+```
+$ curl -v https://jmsr.io/cwM1iQ
+*   Trying 54.192.197.16...
+* Connected to jmsr.io (54.192.197.16) port 443 (#0)
+* found 148 certificates in /etc/ssl/certs/ca-certificates.crt
+* found 597 certificates in /etc/ssl/certs
+* ALPN, offering http/1.1
+* SSL connection using TLS1.2 / ECDHE_RSA_AES_128_GCM_SHA256
+*        server certificate verification OK
+*        server certificate status verification SKIPPED
+*        common name: jmsr.io (matched)
+*        server certificate expiration date OK
+*        server certificate activation date OK
+*        certificate public key: RSA
+*        certificate version: #3
+*        subject: CN=jmsr.io
+*        start date: Mon, 07 May 2018 00:00:00 GMT
+*        expire date: Fri, 07 Jun 2019 12:00:00 GMT
+*        issuer: C=US,O=Amazon,OU=Server CA 1B,CN=Amazon
+*        compression: NULL
+* ALPN, server accepted to use http/1.1
+> GET /cwM1iQ HTTP/1.1
+> Host: jmsr.io
+> User-Agent: curl/7.47.0
+> Accept: */*
+> 
+< HTTP/1.1 301 Moved Permanently
+< Content-Length: 0
+< Connection: keep-alive
+< Date: Sat, 12 May 2018 08:36:48 GMT
+< Location: https://www.james-ridgway.co.uk/blog/build-your-own-custom-short-url-generator-using-aws
+< Server: AmazonS3
+< X-Cache: Miss from cloudfront
+< Via: 1.1 95a4581bed116b6338fc42595fee6f43.cloudfront.net (CloudFront)
+< X-Amz-Cf-Id: s4q4k2DkWwc6jxNvA2XWQYK_wJC51_QDag2CucX-a67aq3si78_9Gw==
+< 
+* Connection #0 to host jmsr.io left intact
+```
+
+### Deleting a Short URL
+
+Deleting an endpoint is also done via a `DELETE` request to `/admin/<token>`, for example:
+
+```
+curl -X DELETE -H "x-api-key: XXXXX" http://example.com/admin/cwM1iQ
+```
