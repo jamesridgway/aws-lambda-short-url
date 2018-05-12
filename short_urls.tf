@@ -235,9 +235,49 @@ resource "aws_api_gateway_deployment" "short_url_api_deployment" {
   stage_name  = "Production"
 }
 
+resource "aws_acm_certificate" "short_url_domain_certificate" {
+  provider          = "aws.cloudfront_acm"
+  domain_name       = "${var.short_url_domain}"
+  validation_method = "DNS"
+  tags {
+    Project = "short_urls"
+  }
+}
+
+data "aws_route53_zone" "short_url_domain" {
+  name = "${var.short_url_domain}"
+}
+
+resource "aws_route53_record" "short_url_domain_alias" {
+  zone_id = "${data.aws_route53_zone.short_url_domain.zone_id}"
+  name    = "${var.short_url_domain}"
+  type    = "A"
+  alias {
+    name                   = "${aws_cloudfront_distribution.short_urls_cloudfront.domain_name}"
+    zone_id                = "${aws_cloudfront_distribution.short_urls_cloudfront.hosted_zone_id}"
+    evaluate_target_health = false
+  }
+}
+
+resource "aws_route53_record" "short_url_domain_cert_validation" {
+  name    = "${aws_acm_certificate.short_url_domain_certificate.domain_validation_options.0.resource_record_name}"
+  type    = "${aws_acm_certificate.short_url_domain_certificate.domain_validation_options.0.resource_record_type}"
+  zone_id = "${data.aws_route53_zone.short_url_domain.id}"
+  records = ["${aws_acm_certificate.short_url_domain_certificate.domain_validation_options.0.resource_record_value}"]
+  ttl     = 60
+}
+
+
+resource "aws_acm_certificate_validation" "short_url_domain_cert" {
+  provider    = "aws.cloudfront_acm"
+  certificate_arn         = "${aws_acm_certificate.short_url_domain_certificate.arn}"
+  validation_record_fqdns = ["${aws_route53_record.short_url_domain_cert_validation.fqdn}"]
+}
 
 resource "aws_cloudfront_distribution" "short_urls_cloudfront" {
-  enabled = true
+  provider = "aws.cloudfront_acm"
+  enabled  = true
+  aliases  = ["${var.short_url_domain}"]
   origin {
     origin_id   = "origin-bucket-${aws_s3_bucket.short_urls_bucket.id}"
     domain_name = "${aws_s3_bucket.short_urls_bucket.website_endpoint}"
@@ -305,7 +345,10 @@ resource "aws_cloudfront_distribution" "short_urls_cloudfront" {
     }
   }
   viewer_certificate {
-    cloudfront_default_certificate = true
+    cloudfront_default_certificate = false
+    acm_certificate_arn            = "${aws_acm_certificate_validation.short_url_domain_cert.certificate_arn}"
+    ssl_support_method             = "sni-only"
+    minimum_protocol_version       = "TLSv1.1_2016"
   }
   tags = {
     Project = "short_urls"
@@ -313,6 +356,9 @@ resource "aws_cloudfront_distribution" "short_urls_cloudfront" {
 }
 
 
+output "Short URL Doamin" {
+  value = "${var.short_url_domain}"
+}
 output "CloudFront Domain Name" {
   value = "${aws_cloudfront_distribution.short_urls_cloudfront.domain_name}"
 }
