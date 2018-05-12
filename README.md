@@ -18,6 +18,11 @@ Finally Route 53 will alias the custom domain name to the domain name of the Clo
 Setup the domain that you want to use for your short URLs as a Hosted Zone in Route 53. Details of how to do this can be found [here](https://www.james-ridgway.co.uk/blog/build-your-own-custom-short-url-generator-using-aws).
 
 ## Deploy
+Initialise the backend to use an S3 bucket to store the state (this only needs to be done once):
+```
+$ terraform init -backend-config "bucket=terraform-states.example.com"
+```
+Alternatively you can remove `terraform.tf` which defines the backend store - this will cause terraform to default to local file storage.
 
 Use terraform to apply the infrastructure change needed to run this short URL generator:
 
