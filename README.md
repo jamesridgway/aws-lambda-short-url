@@ -14,7 +14,10 @@ API Gateway and AWS Lambda will be used to create and delete shortlinks via HTTP
 
 Finally Route 53 will alias the custom domain name to the domain name of the CloudFront distribution.
 
- ## Deploy
+## Prerequisites
+Setup the domain that you want to use for your short URLs as a Hosted Zone in Route 53. Details of how to do this can be found [here](https://www.james-ridgway.co.uk/blog/build-your-own-custom-short-url-generator-using-aws).
+
+## Deploy
 
 Use terraform to apply the infrastructure change needed to run this short URL generator:
 
@@ -34,6 +37,7 @@ Outputs:
 
 Admin API Key = uWyv6B1NPI0vWxVPeQD46ctlmWd6l7x3YLSYCRf0
 CloudFront Domain Name = d111111abcdef8.cloudfront.net
+Short URL Doamin = example.com
 ```
 
 
