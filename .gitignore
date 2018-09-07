@@ -1,3 +1,4 @@
-*.tfvars
-.terraform
 *.tfstate*
+*.tfvars
+*.zip
+.terraform

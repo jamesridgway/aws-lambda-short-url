@@ -1,3 +1,21 @@
+data "archive_file" "apply_security_headers" {
+    type        = "zip"
+    source_dir  = "lambda_functions/apply_security_headers"
+    output_path = "lambda_functions/apply_security_headers.zip"
+}
+
+data "archive_file" "create_shorturl" {
+    type        = "zip"
+    source_dir  = "lambda_functions/create_shorturl"
+    output_path = "lambda_functions/create_shorturl.zip"
+}
+
+data "archive_file" "delete_shorturl" {
+    type        = "zip"
+    source_dir  = "lambda_functions/delete_shorturl"
+    output_path = "lambda_functions/delete_shorturl.zip"
+}
+
 resource "aws_s3_bucket" "short_urls_bucket" {
   bucket = "${var.short_url_domain}"
   acl    = "public-read"
@@ -20,7 +38,10 @@ resource "aws_iam_role" "short_url_lambda_iam" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "lambda.amazonaws.com"
+        "Service": [
+          "lambda.amazonaws.com",
+          "edgelambda.amazonaws.com"
+        ]
       },
       "Effect": "Allow",
       "Sid": ""
@@ -39,6 +60,7 @@ resource "aws_iam_role_policy" "short_url_lambda_policy" {
   "Version": "2012-10-17",
   "Statement": [
     {
+      "Sid": "Stm1",
       "Effect": "Allow",
       "Action": [
         "logs:CreateLogGroup",
@@ -46,6 +68,14 @@ resource "aws_iam_role_policy" "short_url_lambda_policy" {
         "logs:PutLogEvents"
       ],
       "Resource": "arn:aws:logs:*:*:*"
+    },
+    {
+      "Sid": "Stm2",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:GetFunction"
+      ],
+      "Resource": "${aws_lambda_function.apply_security_headers.arn}:*"
     }
   ]
 }
@@ -85,13 +115,26 @@ resource "aws_iam_role_policy_attachment" "short_url_lambda_policy_s3_policy_att
     policy_arn = "${aws_iam_policy.short_url_s3_policy.arn}"
 }
 
+resource "aws_lambda_function" "apply_security_headers" {
+  provider         = "aws.cloudfront_acm"
+  filename         = "lambda_functions/apply_security_headers.zip"
+  function_name    = "apply_security_headers"
+  role             = "${aws_iam_role.short_url_lambda_iam.arn}"
+  handler          = "lambda_function.handler"
+  source_code_hash = "${data.archive_file.create_shorturl.output_base64sha256}"
+  runtime          = "nodejs8.10"
+  publish          = true
+  tags = {
+    Project = "short_urls"
+  }
+}
 
 resource "aws_lambda_function" "short_url_create" {
   filename         = "lambda_functions/create_shorturl.zip"
   function_name    = "short_url_create"
   role             = "${aws_iam_role.short_url_lambda_iam.arn}"
   handler          = "lambda_function.lambda_handler"
-  source_code_hash = "${base64sha256(file("lambda_functions/create_shorturl.zip"))}"
+  source_code_hash = "${data.archive_file.create_shorturl.output_base64sha256}"
   runtime          = "python3.6"
   environment {
     variables = {
@@ -108,7 +151,7 @@ resource "aws_lambda_function" "short_url_delete" {
   function_name    = "short_url_delete"
   role             = "${aws_iam_role.short_url_lambda_iam.arn}"
   handler          = "lambda_function.lambda_handler"
-  source_code_hash = "${base64sha256(file("lambda_functions/delete_shorturl.zip"))}"
+  source_code_hash = "${data.archive_file.delete_shorturl.output_base64sha256}"
   runtime          = "python3.6"
   environment {
     variables = {
@@ -228,6 +271,22 @@ resource "aws_lambda_permission" "short_url_lambda_permssion_short_url_create" {
   source_arn = "arn:aws:execute-api:${var.region}:${var.account_id}:${aws_api_gateway_rest_api.short_urls_api_gateway.id}/*/${aws_api_gateway_method.short_url_api_post.http_method}${aws_api_gateway_resource.short_url_api_resource_admin.path}"
 }
 
+resource "aws_lambda_permission" "short_url_lambda_permssion_apply_security_headers_edgelambda" {
+  provider      = "aws.cloudfront_acm"
+  statement_id  = "AllowExecutionFromCloudFront"
+  action        = "lambda:GetFunction"
+  function_name = "${aws_lambda_function.apply_security_headers.arn}"
+  principal     = "edgelambda.amazonaws.com"
+}
+
+resource "aws_lambda_permission" "short_url_lambda_permssion_apply_security_headers_lambda" {
+  provider      = "aws.cloudfront_acm"
+  statement_id  = "AllowExecutionFromCloudFront2"
+  action        = "lambda:GetFunction"
+  function_name = "${aws_lambda_function.apply_security_headers.arn}"
+  principal     = "lambda.amazonaws.com"
+}
+
 resource "aws_api_gateway_deployment" "short_url_api_deployment" {
   depends_on = ["aws_api_gateway_integration.short_url_api_post_lambda", "aws_api_gateway_integration.short_url_api_delete_lambda"]
 
@@ -275,6 +334,7 @@ resource "aws_acm_certificate_validation" "short_url_domain_cert" {
 }
 
 resource "aws_cloudfront_distribution" "short_urls_cloudfront" {
+  depends_on = ["aws_lambda_function.apply_security_headers"]
   provider = "aws.cloudfront_acm"
   enabled  = true
   aliases  = ["${var.short_url_domain}"]
@@ -314,7 +374,12 @@ resource "aws_cloudfront_distribution" "short_urls_cloudfront" {
       }
     }
 
-    viewer_protocol_policy = "allow-all"
+    lambda_function_association {
+      event_type = "origin-response"
+      lambda_arn = "${aws_lambda_function.apply_security_headers.qualified_arn}"
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
     min_ttl                = 0
     default_ttl            = 3600
     max_ttl                = 86400
@@ -333,7 +398,12 @@ resource "aws_cloudfront_distribution" "short_urls_cloudfront" {
       }
     }
 
-    viewer_protocol_policy = "allow-all"
+    lambda_function_association {
+      event_type = "origin-response"
+      lambda_arn = "${aws_lambda_function.apply_security_headers.qualified_arn}"
+    }
+
+    viewer_protocol_policy = "https-only"
     min_ttl                = 0
     default_ttl            = 3600
     max_ttl                = 86400
