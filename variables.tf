@@ -6,7 +6,3 @@ variable "short_url_domain" {
   type = "string"
   description = "The domain name to use for short URLs."
 }
-variable "account_id" {
-  type = "string"
-  description = "Your AWS account ID."
-}

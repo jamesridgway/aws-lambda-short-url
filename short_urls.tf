@@ -243,7 +243,7 @@ resource "aws_lambda_permission" "short_url_lambda_permssion_short_url_delete" {
   action        = "lambda:InvokeFunction"
   function_name = "${aws_lambda_function.short_url_delete.arn}"
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "arn:aws:execute-api:${var.region}:${var.account_id}:${aws_api_gateway_rest_api.short_urls_api_gateway.id}/*/${aws_api_gateway_method.short_url_api_delete.http_method}${aws_api_gateway_resource.short_url_api_resource_admin.path}/*"
+  source_arn    = "arn:aws:execute-api:${var.region}:${data.aws_caller_identity.current.account_id}:${aws_api_gateway_rest_api.short_urls_api_gateway.id}/*/${aws_api_gateway_method.short_url_api_delete.http_method}${aws_api_gateway_resource.short_url_api_resource_admin.path}/*"
 }
 
 resource "aws_api_gateway_method" "short_url_api_post" {
@@ -268,7 +268,7 @@ resource "aws_lambda_permission" "short_url_lambda_permssion_short_url_create" {
   action        = "lambda:InvokeFunction"
   function_name = "${aws_lambda_function.short_url_create.arn}"
   principal     = "apigateway.amazonaws.com"
-  source_arn = "arn:aws:execute-api:${var.region}:${var.account_id}:${aws_api_gateway_rest_api.short_urls_api_gateway.id}/*/${aws_api_gateway_method.short_url_api_post.http_method}${aws_api_gateway_resource.short_url_api_resource_admin.path}"
+  source_arn = "arn:aws:execute-api:${var.region}:${data.aws_caller_identity.current.account_id}:${aws_api_gateway_rest_api.short_urls_api_gateway.id}/*/${aws_api_gateway_method.short_url_api_post.http_method}${aws_api_gateway_resource.short_url_api_resource_admin.path}"
 }
 
 resource "aws_lambda_permission" "short_url_lambda_permssion_apply_security_headers_edgelambda" {
