@@ -121,7 +121,7 @@ resource "aws_lambda_function" "apply_security_headers" {
   function_name    = "apply_security_headers"
   role             = "${aws_iam_role.short_url_lambda_iam.arn}"
   handler          = "lambda_function.handler"
-  source_code_hash = "${data.archive_file.create_shorturl.output_base64sha256}"
+  source_code_hash = "${data.archive_file.apply_security_headers.output_base64sha256}"
   runtime          = "nodejs8.10"
   publish          = true
   tags = {
