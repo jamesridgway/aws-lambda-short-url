@@ -40,9 +40,9 @@ Once the infrastrucutre has been created it will be given an output similar to t
 ```
 Outputs:
 
-Admin API Key = uWyv6B1NPI0vWxVPeQD46ctlmWd6l7x3YLSYCRf0
-CloudFront Domain Name = d111111abcdef8.cloudfront.net
-Short URL Doamin = example.com
+admin_api_key          = uWyv6B1NPI0vWxVPeQD46ctlmWd6l7x3YLSYCRf0
+cloudfront_domain_name = d111111abcdef8.cloudfront.net
+short_url_domain       = example.com
 ```
 
 ## Using the API
