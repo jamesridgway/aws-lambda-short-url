@@ -6,16 +6,16 @@ Use terraform to quickly setup your own Short URL generator using a custom domai
 
 The plan is to use CloudFront to cache redirecting web pages at the edge of the CloudFront network that will redirect form the short URL to the full URL.
 
-The redirecting web pages will be served up from S3. With S3 you can create an object with a meta data entry called `Website Redirect Location`. When an S3 bucket is configured to host a static website objects ( with a `Website Redirect Location` metadata entry) will be served up over HTTP as a redirecting webpage.
+The redirecting web pages will be served up from S3. With S3 you can create an object with a meta data entry called `Website Redirect Location`. When an S3 bucket is configured to host a static website objects (with a `Website Redirect Location` metadata entry) will be served up over HTTP as a redirecting webpage.
 
-![AWS Lambda Short URL Generator - Approach Overview](https://www.james-ridgway.co.uk/system/images/images/000/000/010/original/approach.png)
+![AWS Lambda Short URL Generator - Approach Overview](https://www.jamesridgway.co.uk/content/images/2020/03/short-urls-approach.png)
 
 API Gateway and AWS Lambda will be used to create and delete shortlinks via HTTP API calls. The API will be protected with an API key, and will be served up via the same CloudFront distrubtion.
 
 Finally Route 53 will alias the custom domain name to the domain name of the CloudFront distribution.
 
 ## Prerequisites
-Setup the domain that you want to use for your short URLs as a Hosted Zone in Route 53. Details of how to do this can be found [here](https://www.james-ridgway.co.uk/blog/build-your-own-custom-short-url-generator-using-aws).
+Setup the domain that you want to use for your short URLs as a Hosted Zone in Route 53. Details of how to do this can be found [here](https://www.jamesridgway.co.uk/build-your-own-custom-short-url-generator-using-aws/).
 
 ## Deploy
 Initialise the backend to use an S3 bucket to store the state (this only needs to be done once):
@@ -70,7 +70,7 @@ The response will provide you with the full short URL and token value in JSON ou
 ```
 
 ### Visit a Short URL
-So here's an example of one of my short URL: [https://jmsr.io/cwM1iQ](https://jmsr.io/cwM1iQ). This link is a short link to my [Build your own custom Short URL generator using AWS](https://www.james-ridgway.co.uk/blog/build-your-own-custom-short-url-generator-using-aws) blog post.
+So here's an example of one of my short URL: [https://jmsr.io/cwM1iQ](https://jmsr.io/cwM1iQ). This link is a short link to my [Build your own custom Short URL generator using AWS](https://www.jamesridgway.co.uk/build-your-own-custom-short-url-generator-using-aws/) blog post.
 
 CloudFront serves up the empty S3 object as shown below using CURL with the vebose flag. You get a `301 Moved Permanently` response with the `Location` header set to the full URL.
 
