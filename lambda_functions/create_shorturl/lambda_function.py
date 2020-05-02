@@ -22,6 +22,11 @@ def lambda_handler(event, context):
             token = custom_url
 
     s3 = boto3.client('s3')
-    s3.put_object(ACL='public-read',Bucket=os.getenv('BUCKET_NAME'), Key=token, WebsiteRedirectLocation=url)
 
+    objs = s3.list_objects(Bucket=os.getenv('BUCKET_NAME'),Prefix=token)
+
+    if 'Contents' in objs.keys() and len(objs['Contents']) > 0 and objs['Contents'][0]['Key'] == token:
+        return {'statusCode': 409, 'body': json.dumps({"error": "The token has already been taken"})}
+
+    s3.put_object(ACL='public-read',Bucket=os.getenv('BUCKET_NAME'), Key=token, WebsiteRedirectLocation=url)
     return {'statusCode': 200,'body': json.dumps({'short_url' : 'https://' + os.getenv('BUCKET_NAME') + '/' + token, 'url': url, 'token': token})}

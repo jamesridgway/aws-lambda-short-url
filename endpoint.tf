@@ -85,8 +85,8 @@ resource "aws_cloudfront_distribution" "short_urls_cloudfront" {
 
     viewer_protocol_policy = "https-only"
     min_ttl                = 0
-    default_ttl            = 3600
-    max_ttl                = 86400
+    default_ttl            = 0
+    max_ttl                = 0
   }
 
   restrictions {
