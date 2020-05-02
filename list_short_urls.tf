@@ -20,6 +20,7 @@ resource "aws_lambda_function" "short_url_list" {
   source_code_hash = data.archive_file.list_short_urls.output_base64sha256
   runtime          = "python3.6"
   timeout          = 10
+  memory_size      = 512
   environment {
     variables = {
       BUCKET_NAME = "${var.short_url_domain}"
