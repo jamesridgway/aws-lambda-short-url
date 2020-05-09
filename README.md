@@ -48,6 +48,10 @@ short_url_domain       = example.com
 ## Using the API
 Deploying the infrastructure with terraform will take only a few minutes and once the CloudFront distribution has been fully initialised you'll be ready to start creating URLs.
 
+The following sections provide examples using `curl`. There is also a python-based CLI/library that you can use for interacting with the API:
+
+* [short-urls-client](https://github.com/jamesridgway/short-urls-client)
+
 ### Creating a Short URL
 
 Creating a URL is done with a `POST` request to the `/admin` endpoint. The `x-api-key` header should be set to the `Admin API Key` value that was generated in the output of the terraform setup:
