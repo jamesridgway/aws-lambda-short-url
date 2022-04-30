@@ -19,7 +19,7 @@ resource "aws_lambda_function" "short_url_delete" {
   role             = aws_iam_role.short_url_lambda_iam.arn
   handler          = "lambda_function.lambda_handler"
   source_code_hash = data.archive_file.delete_shorturl.output_base64sha256
-  runtime          = "python3.6"
+  runtime          = "python3.9"
   environment {
     variables = {
       BUCKET_NAME = "${var.short_url_domain}"

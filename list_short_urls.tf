@@ -18,7 +18,7 @@ resource "aws_lambda_function" "short_url_list" {
   role             = aws_iam_role.short_url_lambda_iam.arn
   handler          = "lambda_function.lambda_handler"
   source_code_hash = data.archive_file.list_short_urls.output_base64sha256
-  runtime          = "python3.6"
+  runtime          = "python3.9"
   timeout          = 10
   memory_size      = 512
   environment {
