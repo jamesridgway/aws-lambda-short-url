@@ -27,7 +27,7 @@ resource "aws_lambda_function" "apply_security_headers" {
   role             = aws_iam_role.short_url_lambda_iam.arn
   handler          = "lambda_function.handler"
   source_code_hash = data.archive_file.apply_security_headers.output_base64sha256
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs14.x"
   publish          = true
   tags = {
     Project = "short_urls"
